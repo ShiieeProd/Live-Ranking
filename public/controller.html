@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Leaderboard Controller</title>
+  <style>
+    :root{
+      --bg: linear-gradient(135deg,#071426 0%,#0f3050 100%);
+      --panel: rgba(10,22,38,0.7);
+      --accent: #4fd2ff;
+      --accent-2: #1976d2;
+      --glass: rgba(255,255,255,0.04);
+      --muted: #bcdfe9;
+      --radius: 14px;
+    }
+    *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--muted);
+    padding:28px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .topbar{
+      max-width:1200px;margin:0 auto 20px;display:flex;align-items:center;gap:12px;
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;display:inline-grid;place-items:center;border-radius:10px;overflow:hidden;background:none;padding:0;}
+    .title{font-size:1.15rem;font-weight:800;color:var(--accent)}
+    .toolbar{display:flex;align-items:center;gap:8px}
+    .toolbar button{background:transparent;border:1px solid var(--glass);color:var(--muted);padding:8px 12px;border-radius:10px;cursor:pointer}
+    .main{
+      max-width:1200px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(280px,1fr));
+      gap:18px;
+      min-height:60vh;
+      align-items:stretch;
+    }
+    .card{background:var(--panel);padding:30px;border-radius:var(--radius);box-shadow:0 6px 18px rgba(3,12,26,0.5);border:1px solid rgba(255,255,255,0.03)}
+    .card h2{margin:0 0 12px;font-size:1rem;color:var(--accent);display:flex;align-items:center;gap:8px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    select, .btn{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(10,18,30,0.6);color:var(--muted);font-weight:600}
+    .scroll-controls .btn.primary { padding: 0px 0; }
+    .row{display:flex;gap:10px}
+    .row .half{flex:1}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#002233;border:none}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+    .active-flash{box-shadow:0 0 0 3px var(--accent-2),0 2px 8px var(--accent);transition:box-shadow 0.1s;}
+    .muted{font-size:0.85rem;color:#9fc9da}
+    .scroll-controls{grid-column:1 / -1;display:flex;gap:10px}
+    .small{font-size:0.9rem;padding:8px 10px}
+    /* compact for OBS use */
+    body.compact{padding:8px}
+    body.compact .card{padding:10px;border-radius:8px}
+    body.compact .title{font-size:0.95rem}
+    @media (max-width:880px){
+      .main{grid-template-columns:1fr}
+      .topbar{padding:0 8px}
+      .scroll-controls{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo"><img src="Main.png" alt="Logo" style="width:44px;height:44px;object-fit:contain;display:block;" /></div>
+      <div>
+        <div class="title">Live Ranking Controller</div>
+        <div class="muted">Control overlays, scoring and quick presets</div>
+      </div>
+    </div>
+  </div>
+
+  <main class="main" id="grid">
+
+    <section class="card" aria-labelledby="liveTitle">
+      <h2 id="liveTitle">Live Ranking</h2>
+      <div class="controls">
+        <div class="row" style="width:100%">
+          <button class="btn primary" onclick="sendAction('show')">Show</button>
+          <button class="btn ghost" onclick="sendAction('hide')">Hide</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="scoreTitle">
+      <h2 id="scoreTitle">Scoreboard</h2>
+      <div class="controls">
+        <div class="row" style="width:100%">
+          <button class="btn primary" onclick="sendAction('scoreboard_show')">Show</button>
+          <button class="btn ghost" onclick="sendAction('scoreboard_hide')">Hide</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="killedTitle">
+      <h2 id="killedTitle">Killed Animation</h2>
+      <div class="controls">
+        <div class="row" style="width:100%">
+          <button id="killedRefreshButton" class="btn primary" onclick="sendAction('killed_refresh')">Refresh</button>
+        </div>
+        <label class="muted" for="maxEliminated">Max Eliminated Teams:</label>
+        <div class="row">
+          <input type="number" id="maxEliminated" min="1" max="24" value="16" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(10,18,30,0.6);color:var(--muted);" />
+          <button class="btn primary" onclick="sendMaxEliminated()" style="width:auto;">Set</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="commsTitle">
+      <h2 id="commsTitle">Comms</h2>
+      <div class="controls">
+        <div class="row" style="width:100%">
+          <button class="btn primary" onclick="sendAction('comms_show')" style="transition:all 0.3s ease;">Show</button>
+          <button class="btn ghost" onclick="sendAction('comms_hide')" style="transition:all 0.3s ease;">Hide</button>
+        </div>
+        <div class="row" style="width:100%">
+          <button class="btn primary" onclick="sendAction('comms_refresh_all')" style="transition:all 0.3s ease;">Refresh All</button>
+        </div>
+        <div class="row" style="width:100%">
+          <button class="btn ghost" onclick="sendAction('comms_previous')" style="transition:all 0.3s ease;">◄ Previous</button>
+          <button class="btn primary" onclick="sendAction('comms_next')" style="transition:all 0.3s ease;">Next ►</button>
+        </div>
+        <label class="muted" for="totalCards">Total Cards:</label>
+        <div class="row">
+          <input type="number" id="totalCards" min="1" max="24" value="3" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(10,18,30,0.6);color:var(--muted);" />
+          <button class="btn primary" onclick="sendTotalCards()" style="width:auto;">Set</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="wwcdTitle">
+      <h2 id="wwcdTitle">WWCD</h2>
+      <div class="controls">
+        <label class="muted" for="wwcd">Select game</label>
+        <div class="row">
+          <select id="wwcd" aria-label="WWCD game select"></select>
+          <button class="btn primary" onclick="sendGame('wwcd','wwcd_channel','wwcd')">Set</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="killsTitle">
+      <h2 id="killsTitle">Kills Stats</h2>
+      <div class="controls">
+        <label class="muted" for="kills">Select game</label>
+        <div class="row">
+          <select id="kills" aria-label="Kills game select"></select>
+          <button class="btn primary" onclick="sendGame('kills','kills_channel','kills')">Set</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="matchTitle">
+      <h2 id="matchTitle">Match Ranking</h2>
+      <div class="controls">
+        <label class="muted" for="match">Select game</label>
+        <div class="row">
+          <select id="match" aria-label="Match game select"></select>
+          <button class="btn primary" onclick="sendGame('match_ranking','match_ranking_channel','match')">Set</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="card scroll-controls">
+      <button class="btn primary" onclick="scrollControl('up')">▲ Scroll Up</button>
+      <button class="btn primary" onclick="scrollControl('down')">▼ Scroll Down</button>
+      <button class="btn ghost" onclick="sendAction('reset')" title="Reset overlays or scroll position (if implemented)">Reset</button>
+    </div>
+
+  </main>
+
+  <script>
+    const API = "/api/control";
+    const post = data => fetch(API, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).catch(e=>console.warn('post failed',e));
+
+    function populate(id, max = 15) {
+      const el = document.getElementById(id);
+      if (!el) {
+        console.error(`Element with id '${id}' not found.`);
+        return;
+      }
+      el.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Select Game';
+      el.appendChild(placeholder);
+      for (let i = 1; i <= max; i++) {
+        const opt = document.createElement('option');
+        opt.value = `Game ${i}`;
+        opt.textContent = `Game ${i}`;
+        el.appendChild(opt);
+      }
+      console.log(`Dropdown with id '${id}' populated with ${max} games.`);
+    }
+
+    function sendAction(action){ post({action}); flashButton(action); }
+
+    function sendGame(action, channel, selectId) {
+      const sel = document.getElementById(selectId);
+      if (!sel) {
+        console.error(`Element with id '${selectId}' not found.`);
+        return;
+      }
+      const game = sel.value;
+      if (!game) {
+        alert('Please select a game first.');
+        console.error('No game selected for action:', action);
+        return;
+      }
+      console.log('Sending game action:', { action, game, channel });
+      post({ action, game })
+        .then(() => {
+          console.log('Game action sent successfully:', { action, game });
+          try {
+            if (!window.BroadcastChannel) {
+              console.error('BroadcastChannel API is not supported in this environment.');
+              return;
+            }
+            const bc = new BroadcastChannel(channel);
+            bc.postMessage({ game });
+            console.log('Broadcasted to channel:', channel, 'with game:', game);
+
+            // Additional logging for debugging
+            console.log(`BroadcastChannel '${channel}' is active. Sent game: ${game}`);
+          } catch (e) {
+            console.error('Error broadcasting to channel:', channel, e);
+          }
+        })
+        .catch(err => console.error('Error sending game action:', err));
+    }
+
+    function scrollControl(direction){
+      // Flash the corresponding scroll button
+      const btn = document.querySelector(
+        direction === 'up' ? '.scroll-controls button[onclick*="up"]' : '.scroll-controls button[onclick*="down"]'
+      );
+      if(btn){
+        btn.classList.add('active-flash');
+        setTimeout(()=>btn.classList.remove('active-flash'), 120);
+      }
+      post({action:'scroll',direction});
+    }
+
+    function flashButton(k){ /* tiny visual feedback via title change */ console.debug('action',k); }
+
+    function sendMaxEliminated(){
+      const val = document.getElementById('maxEliminated').value;
+      if(!val){ return alert('Enter a number'); }
+      post({action:'set_max_eliminated',value:parseInt(val)});
+    }
+
+    function sendTotalCards() {
+      const val = document.getElementById('totalCards').value;
+      if (!val) {
+        alert('Enter a number');
+        return;
+      }
+      const cappedVal = Math.min(parseInt(val), 5); // Cap at maximum 5
+      post({ action: 'set_total_cards', value: cappedVal }).then(() => {
+        // Fetch updated totalCards from the backend
+        fetch('/api/control')
+          .then(res => res.json())
+          .then(data => {
+            if (data.totalCards !== undefined) {
+              totalCards = data.totalCards; // Update the global totalCards variable
+              currentOffset = 0; // Reset offset when total cards change
+              queries = generateQueries(totalCards, currentOffset);
+              urls = queries.map(query =>
+                `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tq=${encodeURIComponent(query)}`
+              );
+              buildCards();
+              refreshAll();
+            }
+          })
+          .catch(err => console.error('Error fetching updated totalCards:', err));
+      });
+    }
+
+    function sendAction(action) {
+      post({ action });
+      flashButton(action);
+
+      // Trigger sendTotalCards when comms_show is pressed
+      if (action === 'comms_show') {
+        // Do not reset currentOffset when showing comms
+        handleCommsAction('show');
+      }
+
+      if (action === 'comms_hide') {
+        handleCommsAction('hide');
+      }
+    }
+
+    /* INIT */
+    populate('wwcd'); populate('kills'); populate('match');
+
+    // ...existing code...
+    // Optimize: trigger scroll instantly on every keydown (including repeats)
+    window.addEventListener('keydown',e=>{
+      if(e.key==='s') sendAction('show');
+      if(e.key==='h') sendAction('hide');
+      if(e.key==='ArrowUp') scrollControl('up');
+      if(e.key==='ArrowDown') scrollControl('down');
+    });
+  </script>
+
+</body>
+</html>

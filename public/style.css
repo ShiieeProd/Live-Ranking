@@ -1,0 +1,381 @@
+:root {
+  --mainWidth: min(90vw, 255px);
+  --font: 'Oswald', sans-serif;
+  --ranking-header-color: white;
+  --ranking-header-background-color: #ff0000;
+  --ranking-element-color: white;
+  --ranking-uneven-background-color: #c20000;
+  --ranking-even-background-color: #6d0000;
+  --alive-background-color: #ffffff;
+  --lower-background-color: #ff0000;
+  --dead-background-color: #0e0d0d;
+  --size-RankingElement: 37px;
+  --font-size-RankingElement: 18px;
+  --size-weighted-RankingElement: 510;
+  --padding-right:1px;
+}
+
+@font-face {
+  font-family: "Anton-Regular";
+  src: url("./fonts/Anton-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Roboto-Regular";
+  src: url("./fonts/Roboto-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Oswald-SemiBold";
+  src: url("./fonts/Oswald-SemiBold.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Oswald-Regular";
+  src: url("./fonts/Oswald-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-family: var(--font);
+}
+
+.app-1080 {
+  width: 1920px;
+  height: 1080px;
+  transform-origin: 0 0;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+#mainDiv {
+  position: absolute;
+  right: var(--padding-right);          /* distance from the right edge - adjust as needed */
+  top: 155px;           /* keep same vertical offset as before */
+  width: var(--mainWidth);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-transform: uppercase;
+  transform: translateX(0%) translateY(175px);
+  margin-right: 0;
+  transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out,
+  opacity 1;
+}
+
+.rankingHeader {
+  display: flex;
+  width: 100%;
+  background-color: var(--ranking-header-background-color);
+  color: var(--ranking-header-color);
+  padding: 8px 0;
+  -webkit-clip-path: polygon(24% 0, 88% 0, 100% 0, 100% 77%, 100% 100%, 0 100%, 0 80%, 0 30%, 7% 0) !important;
+  clip-path: polygon(24% 0, 88% 0, 100% 0, 100% 77%, 100% 100%, 0 100%, 0 80%, 0 30%, 7% 0) !important;
+}
+
+.rankingHeader > p {
+  font-size: 18px;
+  margin: 0;
+  text-align: center;
+  font-family: "Anton-Regular";
+}
+
+#rankingHeaderRank,
+.rankingElementRank {
+  flex: 0 0 35px;
+  text-align: center;
+  padding-left: 18px;
+}
+
+#rankingHeaderTeam,
+.rankingElementLogoWrapper {
+  flex: 0 0 90px;
+}
+
+#rankingHeaderAlive {
+  flex: 0 0 60px;
+  justify-content: center;
+}
+
+.rankingElementAliveWrapper {
+  flex: 0 0 40px;
+  justify-content: center;
+}
+
+#rankingHeaderElims {
+  flex: 0 0 50px;
+  text-align: center;
+}
+
+.rankingElementKills {
+  flex: 0 0 70px;
+  text-align: center;
+}
+
+#rankingElementsWrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.rankingElement {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  height: var(--size-RankingElement);              /* Increased height for bigger rows */
+  margin: 0;
+  padding: 0;
+}
+
+
+.rankingElementBackground {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: var(--size-RankingElement);              /* keep height in sync with rows */
+  background-color: var(--ranking-even-background-color);
+  z-index: 0;
+
+  /* apply the left-pointed polygon only to the background */
+  -webkit-clip-path: polygon(24% 0, 88% 0, 100% 0, 100% 77%, 100% 100%, 0 100%, 0 0%, 0 10%, 2% 0%) !important;
+  clip-path: polygon(24% 0, 88% 0, 100% 0, 100% 77%, 100% 100%, 0 100%, 0 0%, 0 10%, 2% 0%) !important;
+}
+
+/* override any clip on the outer element so inner content is not clipped */
+.rankingElement {
+  -webkit-clip-path: none;
+  clip-path: none;
+}
+
+.rankingElementWrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: var(--size-RankingElement);              /* Match new row height */
+  align-items: center;
+  z-index: 1;
+}
+
+.rankingElementRank,
+.rankingElementName,
+.rankingElementKills,
+.rankingElementPoints {       /* If you have .rankingElementPoints */
+  font-size: var(--font-size-RankingElement);            /* Bigger text */
+  line-height: var(--size-RankingElement);          /* Match new height */
+  font-weight: var(--size-weighted-RankingElement);
+  color: var(--ranking-element-color);
+  margin: 0;
+  font-family: 'Oswald-SemiBold';
+}
+
+.rankingElementWrapper > p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rankingElementLogoWrapper {
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+}
+
+.rankingElementLogo {
+  width: 35px;
+  height: 35px;
+  object-fit: cover;
+  /* margin-right: 8px; Add gap to the right of the logo */
+}
+
+.rankingElementAliveWrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rankingElementAlive {
+  width: 5px;
+  height: 20px;
+  background-color: var(--alive-background-color);
+  border-radius: 25px;
+}
+
+.rankingElement:nth-child(even) .rankingElementBackground {
+  background-color: var(--ranking-uneven-background-color);
+}
+
+.fadedTeam {
+  opacity: 1.0;
+  filter: grayscale(100%);
+  transition: all 0.5s ease-in-out;
+}
+
+.fadedTeam .rankingElementRank,
+.fadedTeam .rankingElementName,
+.fadedTeam .rankingElementLogo,
+.fadedTeam .rankingElementKills,
+.fadedTeam .rankingElementAlive {
+  opacity: 0.4;
+  filter: grayscale(100%);
+}
+
+.lowerHeader {
+  display: flex;
+  width: 100%;
+  background-color: var(--lower-background-color);
+  color: white;
+  padding: 8px 0;
+  justify-content: center;
+  align-items: center;
+}
+
+.lowerHeaderInner {
+  display: flex;
+  gap: 60px;
+}
+
+.lowerHeaderSection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.statusIndicatorBox {
+  width: 8px;
+  height: 10px;
+  border: 1px solid var(--ranking-uneven-background-color);
+}
+
+.whiteBox {
+  background-color: var(--alive-background-color);
+}
+
+.blackBox {
+  background-color: var(--dead-background-color);
+}
+
+.statusIndicatorText {
+  margin: 0;
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(20px);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.5s ease-in-out;
+  will-change: transform, opacity;
+}
+
+/*@keyframes slideInLeft {
+  from { transform: translateX(-100%) translateY(115px); opacity: 0; }
+  to   { transform: translateX(0%) translateY(115px); opacity: 1; }
+}
+@keyframes slideOutRight {
+  from { transform: translateX(0%) translateY(115px); opacity: 1; }
+  to   { transform: translateX(100%) translateY(115px); opacity: 0; }
+}
+
+#mainDiv.slide-in-left {
+  animation: slideInLeft 0.7s forwards;
+}
+#mainDiv.slide-out-right {
+  animation: slideOutRight 0.7s forwards;
+}*/
+
+@keyframes fadeSlideOutRight {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(100%); opacity: 0; }
+}
+@keyframes fadeSlideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+/*.animated-in {
+  animation: fadeSlideInLeft 0.10s ease-in-out forwards;
+}
+.animated-out {
+  animation: fadeSlideOutRight 0.10s ease-in-out forwards;
+}*/
+
+.stagger-animate-in {
+  animation: fadeSlideInRight 0.20s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.stagger-animate-out {
+  animation: fadeSlideOutRight 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Optional: Prevent pointer events during animation */
+.animating-columns * {
+  pointer-events: none;
+}
+
+*,
+::before,
+::after {
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+}
+
+html {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+}
+
+body {
+  margin: 0;
+  line-height: inherit;
+}
+
+h1 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
